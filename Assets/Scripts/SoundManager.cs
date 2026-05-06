@@ -15,6 +15,7 @@ namespace TicTacToe
             GameEvents.InvalidMove += OnInvalidMove;
             GameEvents.GameWon += OnGameWon;
             GameEvents.GameDrawn += OnGameDrawn;
+            GameEvents.Undo += OnMoveMade;
         }
 
         private void OnDisable()
@@ -23,6 +24,7 @@ namespace TicTacToe
             GameEvents.InvalidMove -= OnInvalidMove;
             GameEvents.GameWon -= OnGameWon;
             GameEvents.GameDrawn -= OnGameDrawn;
+            GameEvents.Undo -= OnMoveMade;
         }
 
         private void OnMoveMade()

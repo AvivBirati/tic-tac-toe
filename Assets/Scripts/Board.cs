@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace TicTacToe
@@ -8,6 +9,9 @@ namespace TicTacToe
 
         private string _currentPlayer = "X";
         private bool _isGameOver;
+        private string _winner;
+        
+        private Stack<ICommand> _commands;
 
         private static readonly int[][] WinningLines = new int[][]
         {
@@ -21,14 +25,25 @@ namespace TicTacToe
             new[] { 2, 4, 6 },
         };
 
+        private void Awake()
+        {
+            _commands = new Stack<ICommand>();
+        }
+
         private void OnEnable()
         {
             GameEvents.CellClicked += OnCellClicked;
+            GameEvents.UndoButtonPressed += AttemptUndo;
+            GameEvents.Undo += CommitUndo;
+            GameEvents.StartNewGame += ResetBoard;
         }
 
         private void OnDisable()
         {
             GameEvents.CellClicked -= OnCellClicked;
+            GameEvents.UndoButtonPressed -= AttemptUndo;
+            GameEvents.Undo -= CommitUndo;
+            GameEvents.StartNewGame -= ResetBoard;
         }
 
         private void OnCellClicked(Cell cell)
@@ -44,27 +59,26 @@ namespace TicTacToe
                 GameEvents.InvalidMove?.Invoke();
                 return;
             }
+            
+            _commands.Push(new PlayCommand(cell, _currentPlayer));
+            _commands.Peek().Execute();
 
-            cell.SetMark(_currentPlayer);
-            GameEvents.MoveMade?.Invoke();
-
-            string winner = CheckWinner();
-            if (winner != "")
+            _winner = CheckWinner();
+            if (_winner != "")
             {
                 _isGameOver = true;
-                GameEvents.GameWon?.Invoke(winner);
-                ResetBoard();
-                return;
-            }
-
-            if (IsBoardFull())
+                GameEvents.GameWon?.Invoke(_winner);
+            } else if (IsBoardFull())
             {
                 _isGameOver = true;
                 GameEvents.GameDrawn?.Invoke();
-                ResetBoard();
-                return;
             }
 
+            ChangeTurn();
+        }
+
+        private void ChangeTurn()
+        {
             _currentPlayer = _currentPlayer == "X" ? "O" : "X";
         }
 
@@ -75,7 +89,9 @@ namespace TicTacToe
                 _cells[i].Clear();
             }
             _currentPlayer = "X";
+            _winner = "";
             _isGameOver = false;
+            _commands.Clear();
         }
 
         private string CheckWinner()
@@ -105,6 +121,28 @@ namespace TicTacToe
                 }
             }
             return true;
+        }
+
+        private void AttemptUndo()
+        {
+            if (_commands.Count > 0)
+            {
+                _commands.Pop().Undo();
+            }
+            else
+            {
+                GameEvents.InvalidMove?.Invoke();
+            }
+        }
+
+        private void CommitUndo()
+        {
+            ChangeTurn();
+            _isGameOver = false;
+            if (_winner != "")
+            {
+                
+            }
         }
     }
 }
