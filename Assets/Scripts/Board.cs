@@ -9,7 +9,6 @@ namespace TicTacToe
 
         private string _currentPlayer = "X";
         private bool _isGameOver;
-        private string _winner;
         
         private Stack<ICommand> _commands;
 
@@ -63,11 +62,11 @@ namespace TicTacToe
             _commands.Push(new PlayCommand(cell, _currentPlayer));
             _commands.Peek().Execute();
 
-            _winner = CheckWinner();
-            if (_winner != "")
+            string winner = CheckWinner();
+            if (winner != "")
             {
                 _isGameOver = true;
-                GameEvents.GameWon?.Invoke(_winner);
+                GameEvents.GameWon?.Invoke(winner);
             } else if (IsBoardFull())
             {
                 _isGameOver = true;
@@ -89,7 +88,6 @@ namespace TicTacToe
                 _cells[i].Clear();
             }
             _currentPlayer = "X";
-            _winner = "";
             _isGameOver = false;
             _commands.Clear();
         }
@@ -139,10 +137,6 @@ namespace TicTacToe
         {
             ChangeTurn();
             _isGameOver = false;
-            if (_winner != "")
-            {
-                
-            }
         }
     }
 }
